@@ -1,6 +1,6 @@
 {
   "name": "Recipe Manager Pro",
-  "short_name": "RecipePro",
+  "short_name": "Adv Reci Costing",
   "description": "Professional recipe costing and nutrition for chefs \u2014 by Chef Santosh",
   "start_url": "./index.html",
   "display": "standalone",
