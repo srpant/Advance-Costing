@@ -765,6 +765,23 @@ body.warm .calc-btn.calc-eq{background:linear-gradient(180deg,#8B5E3C,#6B3D1E);c
 .ing-total-meta{font-size:11px;color:var(--text-muted);font-weight:600;margin-left:6px}
 /* ── End Ingredient Card ────────────────────────────────────── */
 
+/* ── Ingredient list: 2-line rows (name + total / qty·unit·waste·cost-per-unit) ── */
+.ing2{display:grid;grid-template-columns:20px minmax(0,1fr) 30px;gap:0 8px;align-items:center;padding:10px 6px 10px 10px;box-sizing:border-box;width:100%}
+.ing2-num{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;background:var(--ing-num-bg);color:var(--ing-num-color);align-self:start;margin-top:1px}
+.ing2-main{min-width:0}
+.ing2-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;min-width:0}
+.ing2 .ing-name-val{flex:1 1 auto;min-width:0;font-size:13px;font-weight:700;line-height:1.28;-webkit-line-clamp:2}
+.ing2 .ing-actual-cost{flex:none;font-size:14px;font-weight:800;line-height:1.28;text-align:right;white-space:nowrap;overflow:visible;text-overflow:clip;font-variant-numeric:tabular-nums}
+.ing2-sub{display:flex;flex-wrap:wrap;align-items:center;gap:2px 10px;margin-top:4px;font-size:11px;line-height:1.3;color:var(--text-sub);font-variant-numeric:tabular-nums}
+.ing2-qty{display:inline-flex;align-items:baseline;gap:3px}
+.ing2 .ing-bot-val{font-size:11px;font-weight:800;color:var(--text);text-align:left;overflow:visible}
+.ing2 .ing-unit-tbl{font-size:11px;font-weight:600;color:var(--text-sub);text-align:left;white-space:nowrap}
+.ing2 .ing-waste-badge{font-size:11px;font-weight:700;color:var(--warn);text-align:left}
+.ing2-cpu{color:var(--text-muted);font-weight:600;white-space:nowrap}
+.ing2-sep{color:var(--text-muted);opacity:.7}
+.ing2 .ing-del-btn{width:30px;height:30px;font-size:18px;justify-self:end}
+.ing-total-val,.ing-total-row{font-variant-numeric:tabular-nums}
+
 .ac-hl{color:var(--accent);font-weight:800}
 .ac-hint{padding:6px 12px;font-size:11px;font-style:italic;color:var(--text-muted);background:var(--tag-bg);border-bottom:1px solid var(--border)}
 
@@ -1530,7 +1547,7 @@ body.dark{color-scheme:dark}
     </div>
 
     <div style="text-align:center;padding:20px 0;color:var(--text-muted);font-size:12px">
-      Recipe Management & Costing — Mobile V108.25<br>Santosh Kumar Pant
+      Recipe Management & Costing — Mobile V108.26<br>Santosh Kumar Pant
     </div>
   </div>
 
@@ -2580,27 +2597,22 @@ function renderRows(){
       return s+q;
     },0);
     H += '<div class="ing-tbl-outer" style="margin-top:10px">';
-    // Header row — same grid class as data rows
-    H += '<div class="ing-tbl-header ing-tbl-grid">';
-    H += '<span></span>';
-    H += '<span class="ing-tbl-header-lbl">Ingredient</span>';
-    H += '<span class="ing-tbl-header-lbl" style="text-align:right">QTY</span>';
-    H += '<span class="ing-tbl-header-lbl" style="text-align:left">Unit</span>';
-    H += '<span class="ing-tbl-header-lbl" style="text-align:right">Waste</span>';
-    H += '<span class="ing-tbl-header-lbl" style="text-align:right">Total</span>';
-    H += '<span></span>';
-    H += '</div>';
-    // Data rows
+    // Each ingredient = 2 lines: name + TOTAL on top, qty/unit · waste · cost-per-unit below
     committed.forEach(function(r, idx){
       const ri = rows.indexOf(r);
       const rc = rowCost(r);
-      H += '<div class="ing-tbl-row ing-tbl-grid" onclick="editIngRow('+ri+')" title="Tap to edit">';
-      H += '<span class="ing-num">'+(idx+1)+'</span>';
-      H += '<span class="ing-name-val">'+escH(r.name||'—')+'</span>';
-      H += '<span class="ing-bot-val" style="text-align:right">'+(r.qty||0)+'</span>';
-      H += '<span class="ing-unit-tbl" style="font-size:10px;font-weight:600;color:var(--text-sub);text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(r.unit||'g')+'</span>';
-      H += '<span class="ing-waste-badge">'+Math.max(0,parseFloat(r.waste)||0)+'%</span>';
-      H += '<span class="ing-actual-cost">'+currFmt(rc)+'</span>';
+      const wst = Math.max(0,parseFloat(r.waste)||0);
+      const cpu = parseFloat(r.cost)||0;
+      const cpuUnit = (r.dbUnit||r.unit||'g');
+      H += '<div class="ing-tbl-row ing2" onclick="editIngRow('+ri+')" title="Tap to edit">';
+      H += '<span class="ing2-num">'+(idx+1)+'</span>';
+      H += '<div class="ing2-main">';
+      H += '<div class="ing2-top"><span class="ing-name-val">'+escH(r.name||'—')+'</span><span class="ing-actual-cost">'+currFmt(rc)+'</span></div>';
+      H += '<div class="ing2-sub">';
+      H += '<span class="ing2-qty"><span class="ing-bot-val">'+escH(String(r.qty||0))+'</span><span class="ing-unit-tbl">'+escH(r.unit||'g')+'</span></span>';
+      if(wst>0) H += '<span class="ing-waste-badge">waste '+(+wst.toFixed(1))+'%</span>';
+      if(cpu>0) H += '<span class="ing2-cpu">'+currFmt(cpu)+'/'+escH(cpuUnit)+'</span>';
+      H += '</div></div>';
       H += '<button class="ing-del-btn" onclick="event.stopPropagation();removeRow('+ri+')" title="Remove">×</button>';
       H += '</div>'; // end ing-tbl-row
     });
